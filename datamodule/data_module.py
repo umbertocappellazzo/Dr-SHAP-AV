@@ -149,6 +149,7 @@ class DataModule_LLM(LightningDataModule):
         self,
         args,
         tokenizer,
+        is_matryoshka=None,
         batch_size=None,
         train_num_buckets=50,
         train_shuffle=True,
@@ -156,6 +157,7 @@ class DataModule_LLM(LightningDataModule):
     ):
         super().__init__()
         self.args = args
+        self.is_matryoshka = is_matryoshka
         self.batch_size = batch_size
         self.train_num_buckets = train_num_buckets
         self.train_shuffle = train_shuffle
@@ -183,7 +185,7 @@ class DataModule_LLM(LightningDataModule):
             audio_transform=AudioTransform("train", noise_type = self.args.noise_type),
             video_transform=VideoTransform("train"),
             downsample_ratio=self.downsample_ratio,
-            is_matryoshka = self.args.is_matryoshka
+            is_matryoshka = self.is_matryoshka
         )
         
         dataset = CustomBucketDataset(
@@ -211,7 +213,7 @@ class DataModule_LLM(LightningDataModule):
             audio_transform=AudioTransform("val", noise_type = self.args.noise_type),
             video_transform=VideoTransform("val"),
             downsample_ratio=self.downsample_ratio,
-            is_matryoshka = self.args.is_matryoshka
+            is_matryoshka = self.is_matryoshka
         )
         dataset = CustomBucketDataset(
             dataset, dataset.input_lengths, 1000, 1, batch_size=self.batch_size
@@ -235,7 +237,7 @@ class DataModule_LLM(LightningDataModule):
                 ),
             video_transform=VideoTransform("test"),
             downsample_ratio=self.downsample_ratio,
-            is_matryoshka = self.args.is_matryoshka
+            is_matryoshka = self.is_matryoshka
         )
         dataloader = torch.utils.data.DataLoader(
             dataset, 

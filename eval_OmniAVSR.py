@@ -272,7 +272,7 @@ def cli_main():
     init_logger(args.debug)
     
     modelmodule = ModelModule_LLM(args)
-    datamodule = DataModule_LLM(args, modelmodule.tokenizer, train_num_buckets=args.train_num_buckets)
+    datamodule = DataModule_LLM(args, modelmodule.tokenizer, is_matryoshka= True, train_num_buckets=args.train_num_buckets)
     trainer = get_trainer(args)
 
     if args.test_specific_ratio or args.test_specific_modality:
