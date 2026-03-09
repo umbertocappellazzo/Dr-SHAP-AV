@@ -176,7 +176,7 @@ class ModelModule_LLM(LightningModule):
             self.log("sample-num-audio-tokens", num_audio_tokens, on_step=True, on_epoch=False, batch_size=batch_size,
                      prog_bar=False)
 
-        generated_ids = self.model(batch, is_trainval = False, modality = self.model.modality) if self.args.is_task_specific else self.model(batch, is_trainval = False)
+        generated_ids = self.model(batch, is_trainval = False, modality = self.model.modality, test_ratio_matry_audio = self.args.downsample_ratio_test_matry_audio, test_ratio_matry_video = self.args.downsample_ratio_test_matry_video) if self.args.is_task_specific else self.model(batch, is_trainval = False, test_ratio_matry_audio = self.args.downsample_ratio_test_matry_audio, test_ratio_matry_video = self.args.downsample_ratio_test_matry_video)
         generated_text = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 
         # If we want to inspect what the model predicts and compare with the ground truth, uncomment the two lines below.
