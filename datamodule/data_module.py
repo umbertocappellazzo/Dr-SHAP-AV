@@ -180,7 +180,7 @@ class DataModule_LLM(LightningDataModule):
             label_path=os.path.join(self.args.root_dir, "labels", self.args.train_file),
             subset="train",
             modality=self.args.modality,
-            audio_transform=AudioTransform("train", noise_type = args.noise_type),
+            audio_transform=AudioTransform("train", noise_type = self.args.noise_type),
             video_transform=VideoTransform("train"),
             downsample_ratio=self.downsample_ratio,
             is_matryoshka = self.args.is_matryoshka
@@ -208,7 +208,7 @@ class DataModule_LLM(LightningDataModule):
             label_path=os.path.join(self.args.root_dir, "labels", self.args.val_file),
             subset="val",
             modality=self.args.modality,
-            audio_transform=AudioTransform("val", noise_type = args.noise_type),
+            audio_transform=AudioTransform("val", noise_type = self.args.noise_type),
             video_transform=VideoTransform("val"),
             downsample_ratio=self.downsample_ratio,
             is_matryoshka = self.args.is_matryoshka
@@ -231,7 +231,7 @@ class DataModule_LLM(LightningDataModule):
             subset="test",
             modality=self.args.modality,
             audio_transform=AudioTransform(
-                "test", noise_type = args.noise_type, snr_target=self.args.decode_snr_target,
+                "test", noise_type = self.args.noise_type, snr_target=self.args.decode_snr_target,
                 ),
             video_transform=VideoTransform("test"),
             downsample_ratio=self.downsample_ratio,
