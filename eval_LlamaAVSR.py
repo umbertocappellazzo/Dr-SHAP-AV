@@ -138,14 +138,12 @@ def parse_args():
     )
     parser.add_argument(
         "--downsample-ratio-audio",
-        nargs="*",
         default=3,
         type=int,
         help="Downsample ratio for audio.",
     )
     parser.add_argument(
         "--downsample-ratio-video",
-        nargs="*",
         default=3,
         type=int,
         help="Downsample ratio for video.",
