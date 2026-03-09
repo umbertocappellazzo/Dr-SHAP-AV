@@ -10,7 +10,7 @@ import logging
 from argparse import ArgumentParser
 
 from datamodule.data_module import DataModule_LLM
-from scripts.lightning_OmniAVSR_shap import ModelModule_LLM
+from scripts.lightning_OmniAVSR import ModelModule_LLM
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
@@ -63,11 +63,6 @@ def parse_args():
     )
     parser.add_argument(
         "--use-shared-lora-task-specific",
-        default= False,
-        type= bool,
-    )
-    parser.add_argument(
-        "--is-single-matry-projector",
         default= False,
         type= bool,
     )
