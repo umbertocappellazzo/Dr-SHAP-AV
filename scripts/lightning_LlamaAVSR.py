@@ -184,7 +184,7 @@ class ModelModule_LLM(LightningModule):
 
             if self.args.output_path_shap is not None:
                 self.output_file = os.path.join(
-                    self.args.output_path,
+                    self.args.output_path_shap,
                     self.args.exp_name
 
                 )
