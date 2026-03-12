@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dr. SHAP-AV: Decoding Relative Modality Contributions in AVSR</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <meta name="description" content="A Shapley-based framework for analyzing modality contributions in Audio-Visual Speech Recognition.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #08080d; color: #e4e4e8;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---- FADE IN ---- */
+    .fade-in {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .fade-d1 { transition-delay: 0.1s; }
+    .fade-d2 { transition-delay: 0.2s; }
+    .fade-d3 { transition-delay: 0.3s; }
+
+    /* ---- NAV ---- */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      padding: 0 40px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(8, 8, 13, 0.82);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .nav-mid { display: flex; gap: 28px; flex-wrap: nowrap; }
+    .nav-mid a {
+      color: rgba(255,255,255,0.4); text-decoration: none;
+      font-size: 13px; font-weight: 500; transition: color 0.25s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      white-space: nowrap;
+    }
+    .nav-mid a:hover { color: #c084fc; }
+
+    /* ---- HERO ---- */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 100px 48px 100px;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(192,132,252,0.10), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 40%, rgba(244,114,182,0.05), transparent 70%),
+        radial-gradient(ellipse 40% 50% at 15% 60%, rgba(96,165,250,0.04), transparent 70%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 72px 72px;
+    }
+    .hero-orb {
+      position: absolute; border-radius: 50%; filter: blur(80px);
+      pointer-events: none; opacity: 0.12;
+    }
+    .hero-orb-1 { width: 500px; height: 500px; top: -150px; right: -100px; background: rgba(192,132,252,0.5); }
+    .hero-orb-2 { width: 350px; height: 350px; bottom: -80px; left: -60px; background: rgba(96,165,250,0.5); }
+
+    .hero-title {
+      position: relative;
+      font-size: clamp(42px, 5.8vw, 76px); font-weight: 900;
+      line-height: 1.04; letter-spacing: -0.035em;
+      max-width: 820px; margin-bottom: 28px;
+    }
+    .grad {
+      background: linear-gradient(135deg, #c084fc 0%, #f472b6 45%, #fb923c 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      position: relative;
+      font-size: 18px; line-height: 1.75; color: rgba(255,255,255,0.42);
+      max-width: 580px; font-weight: 300; margin-bottom: 52px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .hero-btns {
+      position: relative; display: flex; gap: 14px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .hb {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      padding: 15px 30px; border-radius: 10px; font-size: 15px;
+      font-weight: 600; cursor: pointer; transition: all 0.3s;
+      display: inline-flex; align-items: center; gap: 10px;
+      border: none; text-decoration: none;
+    }
+    .hb-primary {
+      background: linear-gradient(135deg, #c084fc, #f472b6);
+      color: white; box-shadow: 0 4px 24px rgba(192,132,252,0.2);
+    }
+    .hb-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 36px rgba(244,114,182,0.4); background: linear-gradient(135deg, #d8b4fe, #f9a8d4); }
+    .hb-ghost {
+      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .hb-ghost:hover {
+      border-color: #f472b6;
+      background: linear-gradient(135deg, #c084fc, #f472b6);
+      color: white;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 36px rgba(244,114,182,0.3);
+    }
+
+    .scroll-hint {
+      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      color: rgba(255,255,255,0.15); font-size: 12px; font-weight: 500;
+      font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em;
+    }
+    .scroll-line {
+      width: 1px; height: 32px;
+      background: linear-gradient(180deg, rgba(192,132,252,0.4), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+    /* ---- SECTIONS ---- */
+    .sec { padding: 100px 40px; max-width: 1120px; margin: 0 auto; }
+    .sec-tag {
+      font-family: 'Fira Code', monospace; font-size: 13px;
+      color: #c084fc; margin-bottom: 16px; font-weight: 500;
+      text-align: center;
+    }
+    .sec h2 {
+      font-size: clamp(28px, 4vw, 42px); font-weight: 800;
+      letter-spacing: -0.025em; margin-bottom: 20px; line-height: 1.12;
+      text-align: center;
+    }
+    .hl {
+      background: linear-gradient(135deg, #c084fc, #f472b6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .lead {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 17px; line-height: 1.8; color: rgba(255,255,255,0.4);
+      max-width: 600px; font-weight: 400;
+      text-align: center; margin-left: auto; margin-right: auto;
+    }
+    .sep {
+      max-width: 1120px; margin: 0 auto; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    }
+
+    /* ---- ABSTRACT ---- */
+    .abstract-card {
+      margin-top: 40px; padding: 40px 44px;
+      border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);
+      background: linear-gradient(135deg, rgba(192,132,252,0.03), rgba(244,114,182,0.02));
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 17px; line-height: 1.9; color: rgba(255,255,255,0.55);
+      position: relative; overflow: hidden;
+    }
+    .abstract-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #c084fc, #f472b6, #fb923c);
+    }
+    .abstract-card strong.purple { color: #c084fc; }
+    .abstract-card strong.white { color: #e4e4e8; }
+
+    /* ---- FINDINGS ---- */
+    .findings-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px; margin-top: 52px;
+    }
+    .f-card {
+      padding: 32px 28px; border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: all 0.35s; position: relative; overflow: hidden;
+      cursor: pointer;
+    }
+    .f-card:hover {
+      background: rgba(192,132,252,0.04);
+      border-color: rgba(192,132,252,0.12);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .f-card::after {
+      content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+      background: linear-gradient(180deg, #c084fc, #f472b6);
+      opacity: 0; transition: opacity 0.35s;
+    }
+    .f-card:hover::after { opacity: 1; }
+    .f-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .f-icon { font-size: 22px; }
+    .f-num {
+      font-family: 'Fira Code', monospace; font-size: 12px;
+      color: rgba(192,132,252,0.6); font-weight: 500;
+      background: rgba(192,132,252,0.08); padding: 3px 10px;
+      border-radius: 6px;
+    }
+    .f-title {
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px;
+      font-weight: 700; margin-bottom: 10px; color: #e8e8ec;
+    }
+    .f-desc {
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14.5px;
+      color: rgba(255,255,255,0.38); line-height: 1.7; font-weight: 400;
+    }
+    .f-card.active {
+      background: rgba(192,132,252,0.06);
+      border-color: rgba(192,132,252,0.2);
+    }
+    .f-card.active::after { opacity: 1; }
+
+    /* ---- FIGURE PREVIEW ---- */
+    .fig-preview {
+      margin-top: 40px; border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      overflow: hidden; position: relative;
+      min-height: 120px;
+      transition: all 0.4s ease;
+    }
+    .fig-preview-inner {
+      padding: 40px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px; max-height: 620px; overflow: auto;;
+    }
+    .fig-preview-hint {
+      text-align: center; padding: 56px 40px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px; color: rgba(255,255,255,0.2);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .fig-preview-hint .hint-icon { font-size: 28px; opacity: 0.5; }
+    .fig-preview::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #c084fc, #f472b6, #fb923c);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .fig-preview.has-fig::before { opacity: 1; }
+    .fig-caption {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px; color: rgba(255,255,255,0.4);
+      text-align: center; line-height: 1.6; max-width: 700px;
+    }
+    .fig-caption strong { color: rgba(255,255,255,0.65); }
+    .fig-img {
+      max-width: 100%; max-height: 500px; height: auto;
+      border-radius: 8px; background: rgba(255,255,255,0.03);
+      display: block; object-fit: contain;
+    }
+    .fig-placeholder-box {
+      width: 100%; padding: 48px;
+      border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 8px; text-align: center;
+      font-family: 'Fira Code', monospace; font-size: 13px;
+      color: rgba(255,255,255,0.2);
+    }
+
+    /* ---- METHOD ---- */
+    .method-cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px; margin-top: 52px;
+    }
+    .m-card {
+      padding: 36px 28px; border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      text-align: center; transition: all 0.35s;
+    }
+    .m-card:hover {
+      border-color: rgba(192,132,252,0.15);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .m-emoji { font-size: 36px; margin-bottom: 20px; display: block; }
+    .m-card h4 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+    .m-card p {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px; color: rgba(255,255,255,0.35); line-height: 1.65;
+    }
+    .eq {
+      margin-top: 16px; padding: 10px 16px;
+      background: rgba(0,0,0,0.3); border-radius: 8px;
+      font-family: 'Fira Code', monospace; font-size: 12px;
+      color: rgba(192,132,252,0.7);
+    }
+    .m-flow {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; margin-top: 36px; flex-wrap: wrap;
+    }
+    .m-flow-step {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-radius: 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+      font-family: 'Fira Code', monospace; font-size: 12px;
+      color: rgba(255,255,255,0.5);
+    }
+    .m-flow-arrow { color: rgba(192,132,252,0.4); font-size: 18px; }
+
+    /* ---- METHOD FIGURE ---- */
+    .method-figure {
+      margin-top: 48px; text-align: center;
+    }
+    .method-fig-img {
+      max-width: 100%; max-height: 420px; height: auto;
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      object-fit: contain;
+    }
+    .method-fig-caption {
+      margin-top: 20px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px; color: rgba(255,255,255,0.4);
+      line-height: 1.7; max-width: 800px;
+      margin-left: auto; margin-right: auto;
+    }
+    .method-fig-caption strong { color: rgba(255,255,255,0.6); }
+    .method-fig-caption em { color: #c084fc; font-style: normal; }
+
+    /* ---- MODELS ---- */
+    .models-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px; margin-top: 48px;
+    }
+    .model-card {
+      padding: 28px 24px; border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: all 0.3s; cursor: pointer;
+    }
+    .model-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(192,132,252,0.15);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .model-card.active {
+      background: rgba(192,132,252,0.06);
+      border-color: rgba(192,132,252,0.2);
+    }
+    .model-name {
+      font-family: 'Fira Code', monospace; font-size: 15px;
+      font-weight: 500; margin-bottom: 6px;
+    }
+    .model-type {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11.5px; text-transform: uppercase;
+      letter-spacing: 0.1em; font-weight: 600;
+    }
+    .model-type.llm { color: rgba(192,132,252,0.65); }
+    .model-type.enc { color: rgba(244,114,182,0.65); }
+    .model-desc {
+      margin-top: 12px; font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px; color: rgba(255,255,255,0.3); line-height: 1.6;
+    }
+
+    /* ---- CITE ---- */
+    .bib-wrap { position: relative; margin-top: 36px; max-width: 680px; }
+    .bib-box {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px; padding: 28px 32px;
+      font-family: 'Fira Code', monospace; font-size: 13px;
+      line-height: 1.9; color: rgba(255,255,255,0.45);
+      overflow-x: auto; white-space: pre;
+    }
+    .bib-box .k { color: #c084fc; }
+    .bib-box .v { color: #6ee7b7; }
+    .cp-btn {
+      position: absolute; top: 14px; right: 14px;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px;
+      padding: 6px 16px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5);
+      cursor: pointer; font-weight: 600; transition: all 0.2s;
+    }
+    .cp-btn:hover { border-color: #c084fc; color: #c084fc; }
+
+    /* ---- FOOTER ---- */
+    .footer {
+      padding: 56px 40px; text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.03);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px; color: rgba(255,255,255,0.15);
+    }
+    .footer p + p { margin-top: 8px; font-size: 12px; }
+
+    /* ---- RESPONSIVE: TABLET ---- */
+    @media (max-width: 900px) {
+      .nav { padding: 0 24px; }
+      .nav-mid { gap: 20px; }
+      .nav-mid a { font-size: 12.5px; }
+      .hero { padding: 90px 32px; }
+      .hero-title { font-size: clamp(36px, 5vw, 56px); }
+      .hero-sub { font-size: 16px; max-width: 480px; }
+      .sec { padding: 80px 32px; }
+      .sec h2 { font-size: clamp(26px, 3.5vw, 36px); }
+      .lead { font-size: 16px; }
+      .abstract-card { padding: 32px; font-size: 15.5px; }
+      .findings-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+      .method-cards { grid-template-columns: 1fr; gap: 14px; }
+      .models-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .m-flow { gap: 10px; }
+      .m-flow-step { padding: 8px 12px; font-size: 11px; }
+      .bib-box { font-size: 12px; padding: 24px; }
+      .fig-preview-inner { padding: 28px; }
+    }
+
+    /* ---- RESPONSIVE: MOBILE ---- */
+    @media (max-width: 640px) {
+      .nav { padding: 0 16px; height: 52px; }
+      .nav-mid { gap: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .nav-mid a { font-size: 12px; }
+      .hero { padding: 80px 20px 60px; min-height: auto; min-height: 100svh; }
+      .hero-title { font-size: clamp(30px, 8vw, 42px); margin-bottom: 20px; }
+      .hero-sub { font-size: 15px; margin-bottom: 36px; max-width: 100%; }
+      .hero-btns { flex-direction: column; align-items: stretch; width: 100%; max-width: 300px; }
+      .hb { justify-content: center; padding: 14px 24px; font-size: 14px; }
+      .scroll-hint { display: none; }
+      .sec { padding: 64px 20px; }
+      .sec h2 { font-size: 26px; }
+      .lead { font-size: 15px; }
+      .abstract-card { padding: 24px 20px; font-size: 15px; line-height: 1.8; }
+      .findings-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
+      .f-card { padding: 24px 20px; }
+      .f-title { font-size: 15px; }
+      .f-desc { font-size: 14px; }
+      .method-cards { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
+      .m-card { padding: 28px 20px; }
+      .m-flow { flex-direction: column; gap: 8px; margin-top: 28px; }
+      .m-flow-arrow { transform: rotate(90deg); }
+      .m-flow-step { width: 100%; justify-content: center; }
+      .models-grid { grid-template-columns: 1fr; gap: 10px; margin-top: 36px; }
+      .model-card { padding: 22px 20px; }
+      .fig-preview-hint { padding: 32px 20px; font-size: 13px; }
+      .fig-preview-inner { padding: 20px; max-height: 450px; }
+      .fig-img { max-height: 350px; }
+      .fig-placeholder { padding: 40px 16px; font-size: 12px; }
+      .fig-preview-hint { padding: 36px 20px; font-size: 14px; }
+      .fig-caption { font-size: 13px; }
+      .method-figure { margin-top: 32px; }
+      .method-fig-img { max-height: 300px; }
+      .method-fig-caption { font-size: 13px; }
+      .bib-wrap { max-width: 100%; }
+      .bib-box { font-size: 11px; padding: 20px 16px; }
+      .cp-btn { top: 8px; right: 8px; padding: 5px 12px; }
+      .sep { margin-left: 20px; margin-right: 20px; }
+      .footer { padding: 40px 20px; }
+    }
+
+    /* ---- RESPONSIVE: SMALL MOBILE ---- */
+    @media (max-width: 380px) {
+      .nav-mid { gap: 10px; }
+      .nav-mid a { font-size: 11px; }
+      .hero-title { font-size: 28px; }
+      .sec h2 { font-size: 24px; }
+      .f-card { padding: 20px 16px; }
+      .abstract-card { padding: 20px 16px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-mid">
+      <a href="#abstract">Abstract</a>
+      <a href="#method">Method</a>
+      <a href="#models">Models</a>
+      <a href="#findings">Findings</a>
+      <a href="#cite">Cite</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+
+    <h1 class="hero-title fade-in fade-d1">
+      <span class="grad">Dr. SHAP-AV:</span><br>
+      Decoding Modality<br>Contributions via Shapley Attribution in AVSR
+    </h1>
+    <p class="hero-sub fade-in fade-d2">
+      A <span class="grad">Shapley</span>-based framework revealing how audio-visual speech recognition models balance what they hear and what they see &mdash; across noise levels, decoding stages, and architectures.
+    </p>
+    <div class="hero-btns fade-in fade-d3">
+      <a class="hb hb-ghost" href="#">&#x1F4C4; Read Paper</a>
+      <a class="hb hb-ghost" href="#">&#x1F4BB; GitHub</a>
+      <a class="hb hb-ghost" href="#cite">&#x1F4CB; BibTeX</a>
+    </div>
+
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      SCROLL
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ABSTRACT -->
+  <section class="sec" id="abstract">
+    <div class="fade-in">
+      <div class="sec-tag">// Abstract</div>
+      <h2>What is <span class="hl">Dr. SHAP-AV</span>?</h2>
+      <p class="lead">A unified framework for understanding how AVSR models balance audio and visual modalities via <span class="grad">Shapley</span> values.</p>
+    </div>
+    <div class="fade-in fade-d1">
+      <div class="abstract-card">
+        Audio-Visual Speech Recognition leverages both acoustic and visual information for robust recognition under noise. However, how models balance these modalities remains unclear. We present <strong class="purple">Dr.&nbsp;SHAP-AV</strong>, a framework using Shapley values to analyze modality contributions in AVSR. Through experiments on six models across two benchmarks and varying SNR levels, we introduce three analyses: <strong class="white">Global SHAP</strong> for overall modality balance, <strong class="white">Generative SHAP</strong> for contribution dynamics during decoding, and <strong class="white">Temporal Alignment SHAP</strong> for input-output correspondence. Our findings reveal that models shift toward visual reliance under noise yet maintain high audio contributions even under severe degradation. These findings expose a persistent audio bias, motivating ad-hoc modality-weighting mechanisms and Shapley-based attribution as a standard AVSR diagnostic.
+      </div>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- METHOD -->
+  <section class="sec" id="method">
+    <div class="fade-in">
+      <div class="sec-tag">// Method</div>
+      <h2>Three Axes of <span class="hl">Analysis</span></h2>
+      <p class="lead">From the Shapley matrix &Phi;, capturing each input feature's contribution to each generated token, we derive three complementary metrics.</p>
+    </div>
+    <div class="method-cards">
+      <div class="m-card fade-in">
+        <span class="m-emoji">&#x1F310;</span>
+        <h4>Global SHAP</h4>
+        <p>Aggregates contributions across all features and tokens to quantify overall audio vs. visual balance.</p>
+        <div class="eq">\( \begin{align} \text{A-SHAP} &= \frac{\displaystyle\sum_{j \in \mathcal{A}} \sum_{t=1}^{T} |\phi_{j,t}|}{\displaystyle\sum_{j \in \mathcal{F}} \sum_{t=1}^{T} |\phi_{j,t}|} \\
+    \text{V-SHAP} &= \frac{\displaystyle\sum_{j \in \mathcal{V}} \sum_{t=1}^{T} |\phi_{j,t}|}{\displaystyle\sum_{j \in \mathcal{F}} \sum_{t=1}^{T} |\phi_{j,t}|}\end{align} \)</div>
+      </div>
+      <div class="m-card fade-in">
+        <span class="m-emoji">&#x1F4C8;</span>
+        <h4>Generative SHAP</h4>
+        <p>Tracks how modality reliance evolves across windowed stages of autoregressive decoding.</p>
+        <div class="eq">\( \begin{align}
+    \text{A-SHAP}^{(w)} &= \frac{\displaystyle\sum_{j \in \mathcal{A}} \sum_{t \in \mathcal{T}_w} |\phi_{j,t}|}{\displaystyle\sum_{j \in \mathcal{F}} \sum_{t \in \mathcal{T}_w} |\phi_{j,t}|}, \label{eq:gen_ashap} \\
+    \text{V-SHAP}^{(w)} &= 1 - \text{A-SHAP}^{(w)}. \label{eq:gen_vshap}
+\end{align} \)</div>
+      </div>
+      <div class="m-card fade-in">
+        <span class="m-emoji">&#x1F517;</span>
+        <h4>Alignment SHAP</h4>
+        <p>Examines temporal correspondence between input feature positions and output token positions.</p>
+        <div class="eq">\( H_{k,w}^{(m)} = \frac{\displaystyle\sum_{j \in \mathcal{F}_k^{(m)}} \sum_{t \in \mathcal{T}_w} |\phi_{j,t}|}{\displaystyle\sum_{w'=1}^{W} \sum_{j \in \mathcal{F}_k^{(m)}} \sum_{t \in \mathcal{T}_{w'}} |\phi_{j,t}|} \)</sup></div>
+      </div>
+    </div>
+    
+    <!-- Method overview figure -->
+    <div class="method-figure fade-in">
+      <img class="method-fig-img" src="images/SHAP_main_diagram.png" alt="Overview of the three proposed SHAP-based analyses" onerror="this.outerHTML='<div class=\'fig-placeholder-box\'>Place your method overview figure at: figures/fig2_method.png</div>'">
+      <div class="method-fig-caption">
+        Overview of the three proposed SHAP-based analyses. From the Shapley matrix &Phi;, we compute: <em>Global SHAP</em> (overall modality balance), <em>Generative SHAP</em> (contribution dynamics across decoding), and <em>Temporal Alignment SHAP</em> (input-output correspondence).
+      </div>
+    </div>
+
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- MODELS -->
+  <section class="sec" id="models">
+    <div class="fade-in">
+      <div class="sec-tag">// Models</div>
+      <h2>Six Models, <span class="hl">Two Paradigms</span></h2>
+      <p class="lead">We evaluate models spanning both LLM-based and encoder-decoder AVSR architectures on LRS2 and LRS3. Hover over a model to see its architecture.</p>
+    </div>
+    <div class="models-grid">
+      <div class="model-card fade-in" data-model="0" onmouseenter="showModel(0)" onclick="toggleModel(0)">
+        <div class="model-name">Llama-AVSR</div>
+        <div class="model-type llm">LLM-based</div>
+        <div class="model-desc">First multimodal LLM for AVSR with linear projectors</div>
+      </div>
+      <div class="model-card fade-in" data-model="1" onmouseenter="showModel(1)" onclick="toggleModel(1)">
+        <div class="model-name">Llama-SMoP</div>
+        <div class="model-type llm">LLM-based</div>
+        <div class="model-desc">Sparse mixture-of-experts projectors for enhanced fusion</div>
+      </div>
+      <div class="model-card fade-in" data-model="2" onmouseenter="showModel(2)" onclick="toggleModel(2)">
+        <div class="model-name">Omni-AVSR</div>
+        <div class="model-type llm">LLM-based</div>
+        <div class="model-desc">Unified ASR/VSR/AVSR with matryoshka representations</div>
+      </div>
+      <div class="model-card fade-in" data-model="3" onmouseenter="showModel(3)" onclick="toggleModel(3)">
+        <div class="model-name">AV-HuBERT</div>
+        <div class="model-type enc">Encoder-Decoder</div>
+        <div class="model-desc">Self-supervised masked audio-visual prediction</div>
+      </div>
+      <div class="model-card fade-in" data-model="4" onmouseenter="showModel(4)" onclick="toggleModel(4)">
+        <div class="model-name">Auto-AVSR</div>
+        <div class="model-type enc">Encoder-Decoder</div>
+        <div class="model-desc">MLP-based fusion with CTC/attention training</div>
+      </div>
+      <div class="model-card fade-in" data-model="5" onmouseenter="showModel(5)" onclick="toggleModel(5)">
+        <div class="model-name">Whisper-Flamingo</div>
+        <div class="model-type enc">Encoder-Decoder</div>
+        <div class="model-desc">Gated cross-attention on top of Whisper backbone</div>
+      </div>
+    </div>
+
+    <!-- Model architecture preview panel -->
+    <div class="fig-preview fade-in" id="modelPreview">
+      <div class="fig-preview-hint" id="modelHint">
+        <span class="hint-icon">&#x1F3D7;</span>
+        Hover over a model to see its architecture diagram
+      </div>
+      <div class="fig-preview-inner" id="modelContent" style="display:none;">
+        <div id="modelImage"></div>
+        <div class="fig-caption" id="modelCaption"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- FINDINGS (interactive with figure preview) -->
+  <section class="sec" id="findings">
+    <div class="fade-in">
+      <div class="sec-tag">// Findings</div>
+      <h2>Six Key <span class="hl">Discoveries</span></h2>
+      <p class="lead">From analyzing modality contributions across six state-of-the-art AVSR models on LRS2 and LRS3. Hover over each finding to explore the corresponding result.</p>
+    </div>
+
+    <!-- Findings 1-3 -->
+    <div class="findings-group" id="findingsGroup1">
+      <div class="findings-grid">
+        <div class="f-card fade-in" data-finding="0" data-group="1" onmouseenter="showFinding(0, 1)" onclick="toggleFinding(0, 1)">
+          <div class="f-top"><span class="f-icon">&#x1F50A;</span><span class="f-num">01</span></div>
+          <div class="f-title">Persistent Audio Bias</div>
+          <div class="f-desc">Models maintain 38&ndash;46% audio contribution even at &minus;10 dB SNR, where substantially stronger visual dominance would be expected.</div>
+        </div>
+        <div class="f-card fade-in" data-finding="1" data-group="1" onmouseenter="showFinding(1, 1)" onclick="toggleFinding(1, 1)">
+          <div class="f-top"><span class="f-icon">&#x26A1;</span><span class="f-num">02</span></div>
+          <div class="f-title">Dynamic Generation Shift</div>
+          <div class="f-desc">Whisper-Flamingo and Omni-AVSR progressively increase audio reliance during decoding; AV-HuBERT maintains stable balance throughout.</div>
+        </div>
+        <div class="f-card fade-in" data-finding="2" data-group="1" onmouseenter="showFinding(2, 1)" onclick="toggleFinding(2, 1)">
+          <div class="f-top"><span class="f-icon">&#x1F517;</span><span class="f-num">03</span></div>
+          <div class="f-title">Robust Temporal Alignment</div>
+          <div class="f-desc">Both modalities independently maintain input-output temporal correspondence, even under severe acoustic noise.</div>
+        </div>
+      </div>
+      <div class="fig-preview fade-in" id="figPreview1">
+        <div class="fig-preview-hint" id="figHint1">
+          <span class="hint-icon">&#x1F50D;</span>
+          Hover over a finding to explore the corresponding figure
+        </div>
+        <div class="fig-preview-inner" id="figContent1" style="display:none;">
+          <div id="figImage1"></div>
+          <div class="fig-caption" id="figCaption1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Findings 4-6 -->
+    <div class="findings-group" id="findingsGroup2">
+      <div class="findings-grid" style="margin-top: 24px;">
+        <div class="f-card fade-in" data-finding="3" data-group="2" onmouseenter="showFinding(3, 2)" onclick="toggleFinding(3, 2)">
+          <div class="f-top"><span class="f-icon">&#x1F3B5;</span><span class="f-num">04</span></div>
+          <div class="f-title">Noise-Type Sensitivity</div>
+          <div class="f-desc">Different noise types induce varying degrees of visual reliance, with more challenging conditions producing larger shifts toward vision.</div>
+        </div>
+        <div class="f-card fade-in" data-finding="4" data-group="2" onmouseenter="showFinding(4, 2)" onclick="toggleFinding(4, 2)">
+          <div class="f-top"><span class="f-icon">&#x23F1;</span><span class="f-num">05</span></div>
+          <div class="f-title">Architecture-Dependent Duration</div>
+          <div class="f-desc">Utterance duration affects modality contributions differently across architectures: no universal trend exists.</div>
+        </div>
+        <div class="f-card fade-in" data-finding="5" data-group="2" onmouseenter="showFinding(5, 2)" onclick="toggleFinding(5, 2)">
+          <div class="f-top"><span class="f-icon">&#x1F4CA;</span><span class="f-num">06</span></div>
+          <div class="f-title">SNR Drives Balance</div>
+          <div class="f-desc">Acoustic conditions are the dominant factor driving modality balance; recognition difficulty has minimal effect.</div>
+        </div>
+      </div>
+      <div class="fig-preview fade-in" id="figPreview2">
+        <div class="fig-preview-hint" id="figHint2">
+          <span class="hint-icon">&#x1F50D;</span>
+          Hover over a finding to explore the corresponding figure
+        </div>
+        <div class="fig-preview-inner" id="figContent2" style="display:none;">
+          <div id="figImage2"></div>
+          <div class="fig-caption" id="figCaption2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- CITE -->
+  <section class="sec" id="cite">
+    <div class="fade-in">
+      <div class="sec-tag">// Citation</div>
+      <h2>Cite This <span class="hl">Work</span></h2>
+    </div>
+    <div class="fade-in fade-d1">
+      <div class="bib-wrap">
+        <button class="cp-btn" id="copyBtn" onclick="copyBib()">Copy</button>
+        <div class="bib-box"><span class="k">@article</span>{drshapav2026,
+  title = {<span class="v">Dr. SHAP-AV: Decoding Relative Modality
+          Contributions via Shapley Attribution in
+          Audio-Visual Speech Recognition</span>},
+  author = {<span class="v">Umberto, Cappellazzo and Stavros, Petridis and Maja, Pantic</span>},
+  journal = {<span class="v">arXiv preprint arXiv:</span>},
+  year = {<span class="v">2026</span>}
+}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>Dr. SHAP-AV</p>
+    <p>Built with care for the research community</p>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Scroll-triggered fade-in
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ---- FINDINGS ----
+    // Replace img values with actual paths, e.g. "figures/fig3.png"
+    const findingFigures = [
+      {
+        img: 'images/permutation_shap.png',
+        placeholder: "Global SHAP audio/video contributions across SNR levels",
+        caption: "<strong>Finding 1 — Persistent Audio Bias.</strong> Global SHAP analysis reveals that all six models shift toward visual reliance as SNR decreases, yet audio contributions remain at 38–46% even at −10 dB."
+      },
+      {
+        img: 'images/generation_SHAP.png',
+        placeholder: "Generative SHAP — modality contributions during token generation",
+        caption: "<strong>Finding 2 — Dynamic Generation Shift.</strong> Whisper-Flamingo and Omni-AVSR show increasing audio reliance during decoding, with a U-shaped pattern under noise. AV-HuBERT maintains stable balance."
+      },
+      {
+        img: 'images/alignment_SHAP.png',
+        placeholder: "Temporal Alignment SHAP heatmaps for AV-HuBERT",
+        caption: "<strong>Finding 3 — Robust Temporal Alignment.</strong> Both modalities show clear diagonal patterns in input-output correspondence, preserved even under severe noise (−10 dB)."
+      },
+      {
+        img: 'images/noise.png',
+        placeholder: "Global SHAP audio contribution across acoustic noise types",
+        caption: "<strong>Finding 4 — Noise-Type Sensitivity.</strong> Music, sound, and speech noise induce smaller shifts than babble noise. AV-HuBERT shows the most elastic adaptation across all noise types."
+      },
+      {
+        img: 'images/duration.png',
+        placeholder: "Global SHAP audio contributions vs. input duration",
+        caption: "<strong>Finding 5 — Architecture-Dependent Duration.</strong> Whisper-Flamingo shifts toward video with longer utterances; AV-HuBERT reverses under noise; Omni-AVSR shows a mild positive trend in both conditions."
+      },
+      {
+        img: 'images/wer.png',
+        placeholder: "Mean audio contribution across WER ranges",
+        caption: "<strong>Finding 6 — SNR Drives Balance.</strong> Audio contribution stays stable across WER bins within each SNR level. The shift induced by SNR (up to 27 pp) far exceeds any effect of recognition difficulty."
+      }
+    ];
+
+    // ---- MODEL ARCHITECTURES ----
+    // Replace img values with actual paths, e.g. "figures/arch_llama_avsr.png"
+    const modelFigures = [
+      { img: 'images/Llama-avsr.png', placeholder: "Llama-AVSR architecture diagram", caption: "<strong>Llama-AVSR.</strong> Audio and visual tokens from modality-specific encoders are projected via linear layers and fed to a Llama LLM for autoregressive text generation." },
+      { img: 'images/Llama-smop.png', placeholder: "Llama-SMoP architecture diagram", caption: "<strong>Llama-SMoP.</strong> Extends Llama-AVSR by replacing linear projectors with sparse mixture-of-experts modules using a shared router for both modalities." },
+      { img: 'images/Omni-avsr.png', placeholder: "Omni-AVSR architecture diagram", caption: "<strong>Omni-AVSR.</strong> A unified multimodal LLM supporting ASR, VSR, and AVSR within a single model, trained with matryoshka representation learning." },
+      { img: 'images/AV-hubert.png', placeholder: "AV-HuBERT architecture diagram", caption: "<strong>AV-HuBERT.</strong> Self-supervised framework learning joint audio-visual representations by predicting cluster assignments of masked audio-visual segments." },
+      { img: 'images/Auto-avsr.png', placeholder: "Auto-AVSR architecture diagram", caption: "<strong>Auto-AVSR.</strong> Processes audio and visual streams through ResNet/Conformer encoders, fused via MLP concatenation, with a Transformer decoder for CTC/attention training." },
+      { img: 'images/Whisper-flamingo.png', placeholder: "Whisper-Flamingo architecture diagram", caption: "<strong>Whisper-Flamingo.</strong> Extends Whisper with Flamingo-style gated cross-attention layers in the decoder, attending to visual features from lip movements." }
+    ];
+
+    const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+
+    // Track active states per panel
+    let activeFindingGroup1 = -1;
+    let activeFindingGroup2 = -1;
+    let activeModel = -1;
+
+    // ---- Generic preview panel logic ----
+    function showPreview(panelId, data, cards, activeIdx) {
+      const preview = document.getElementById(panelId);
+      const hint = preview.querySelector('.fig-preview-hint');
+      const content = preview.querySelector('.fig-preview-inner');
+      const imgEl = content.children[0];
+      const capEl = preview.querySelector('.fig-caption');
+
+      // Highlight active card
+      cards.forEach((card, i) => card.classList.toggle('active', i === activeIdx));
+
+      hint.style.display = 'none';
+      content.style.display = 'flex';
+      preview.classList.add('has-fig');
+
+      if (data.img) {
+        imgEl.innerHTML = '<img class="fig-img" src="' + data.img + '" alt="' + data.placeholder + '">';
+      } else {
+        imgEl.innerHTML = '<div class="fig-placeholder-box">' + data.placeholder + '</div>';
+      }
+      capEl.innerHTML = data.caption;
+    }
+
+    function clearPreview(panelId, cards) {
+      const preview = document.getElementById(panelId);
+      const hint = preview.querySelector('.fig-preview-hint');
+      const content = preview.querySelector('.fig-preview-inner');
+
+      cards.forEach(card => card.classList.remove('active'));
+      hint.style.display = 'flex';
+      content.style.display = 'none';
+      preview.classList.remove('has-fig');
+    }
+
+    // ---- Findings: Group 1 (indices 0-2) ----
+    function getGroup1Cards() {
+      return document.querySelectorAll('#findingsGroup1 .f-card');
+    }
+
+    function showFindingGroup1(idx) {
+      activeFindingGroup1 = idx;
+      showPreview('figPreview1', findingFigures[idx], getGroup1Cards(), idx);
+    }
+
+    function clearFindingGroup1() {
+      activeFindingGroup1 = -1;
+      clearPreview('figPreview1', getGroup1Cards());
+    }
+
+    // ---- Findings: Group 2 (indices 3-5) ----
+    function getGroup2Cards() {
+      return document.querySelectorAll('#findingsGroup2 .f-card');
+    }
+
+    function showFindingGroup2(idx) {
+      activeFindingGroup2 = idx;
+      const localIdx = idx - 3; // map to 0-2 for card highlighting
+      showPreview('figPreview2', findingFigures[idx], getGroup2Cards(), localIdx);
+    }
+
+    function clearFindingGroup2() {
+      activeFindingGroup2 = -1;
+      clearPreview('figPreview2', getGroup2Cards());
+    }
+
+    // ---- Findings: Unified handlers ----
+    function showFinding(idx, group) {
+      if (isMobile()) return;
+      if (group === 1) showFindingGroup1(idx);
+      else showFindingGroup2(idx);
+    }
+
+    function toggleFinding(idx, group) {
+      if (!isMobile()) return;
+      if (group === 1) {
+        if (activeFindingGroup1 === idx) { clearFindingGroup1(); }
+        else {
+          showFindingGroup1(idx);
+          setTimeout(() => {
+            document.getElementById('figPreview1').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 100);
+        }
+      } else {
+        if (activeFindingGroup2 === idx) { clearFindingGroup2(); }
+        else {
+          showFindingGroup2(idx);
+          setTimeout(() => {
+            document.getElementById('figPreview2').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 100);
+        }
+      }
+    }
+
+    // Clear on mouse leave per group (desktop)
+    document.getElementById('findingsGroup1')?.addEventListener('mouseleave', () => {
+      if (!isMobile()) clearFindingGroup1();
+    });
+    document.getElementById('findingsGroup2')?.addEventListener('mouseleave', () => {
+      if (!isMobile()) clearFindingGroup2();
+    });
+
+    // ---- Models ----
+    function getModelCards() {
+      return document.querySelectorAll('#models .model-card');
+    }
+
+    function showModel(idx) {
+      if (isMobile()) return;
+      activeModel = idx;
+      showPreview('modelPreview', modelFigures[idx], getModelCards(), idx);
+    }
+
+    function toggleModel(idx) {
+      if (!isMobile()) return;
+      if (activeModel === idx) {
+        clearModel();
+      } else {
+        activeModel = idx;
+        showPreview('modelPreview', modelFigures[idx], getModelCards(), idx);
+        setTimeout(() => {
+          document.getElementById('modelPreview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+      }
+    }
+
+    function clearModel() {
+      activeModel = -1;
+      clearPreview('modelPreview', getModelCards());
+    }
+
+    // Clear on mouse leave from models section (desktop)
+    document.getElementById('models')?.addEventListener('mouseleave', () => {
+      if (!isMobile()) clearModel();
+    });
+
+    // ---- Copy BibTeX ----
+    function copyBib() {
+      const bib = `@article{drshapav2026,
+  title={Dr. SHAP-AV: Decoding Relative Modality Contributions via Shapley Attribution in Audio-Visual Speech Recognition},
+  author={Anonymous},
+  year={2026},
+  note={Under submission}
+}`;
+      navigator.clipboard.writeText(bib).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2500);
+      });
+    }
+  </script>
+
+</body>
+</html>
