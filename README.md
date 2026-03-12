@@ -45,7 +45,7 @@ Dr. SHAP-AV is a unified Shapley-based framework for understanding how AVSR mode
   <p><i>The three proposed SHAP-based analyses in Dr. SHAP-AV: Global/Generative/Temporal Alignment SHAP.</i></p>
 </div>
 
-Through Dr. SHAP, we find multiple key findings:
+Through Dr. SHAP, we find multiple key findings (more details in our paper):
 - **Persistent Audio Bias**: AVSR models tend to shift toward visual reliance as noise increases, yet maintain high audio contributions
 even under severe degradation.
 - **Dynamic Generation Shift**: Whisper-Flamingo and Omni-AVSR progressively increase audio reliance during generation, while AV-
@@ -112,7 +112,7 @@ The most important arguments to specify regardless of the pre-trained model used
 
 </details>
 
-**Example 1**: We compute Global SHAP contributions for Llama-AVSR using permutation SHAP in clean conditions sampling 2000 coalitions. You can reduce the number of coalitions to make the computation faster.
+**Example 1**: We compute Global SHAP contributions for *Llama-AVSR* using permutation SHAP in clean conditions sampling 2000 coalitions. You can reduce the number of coalitions to make the computation faster.
 
 ```Shell
 python eval_LlamaAVSR.py --wandb-project [wandb_project] --exp-name LRS3_Llama-AVSR_shap_permutation_clean \
@@ -123,7 +123,7 @@ python eval_LlamaAVSR.py --wandb-project [wandb_project] --exp-name LRS3_Llama-A
 --compute-shap True --shap-alg permutation --num-samples-shap 2000 --output-path-shap [/path/to/output/folder]
 ```
 
-**Example 2**: We compute Global SHAP contributions for Llama-SMoP using permutation SHAP in noisy conditions (-10dB, babble noise) sampling 2000 coalitions. 
+**Example 2**: We compute Global SHAP contributions for *Llama-SMoP* using permutation SHAP in noisy conditions (-10dB, babble noise) sampling 2000 coalitions. 
 
 ```Shell
 python eval_LlamaSMoP.py --wandb-project [wandb_project] --exp-name LRS3_Llama_SMoP_shap_permutation_minus10dB_babblenoise \
@@ -135,7 +135,7 @@ python eval_LlamaSMoP.py --wandb-project [wandb_project] --exp-name LRS3_Llama_S
 --output-path-shap [/path/to/output/folder] --decode-snr-target -10 --noise-type babble
 ```
 
-**Example 3**: We compute Global SHAP contributions for Omni-AVSR using sampling SHAP in noisy conditions (0dB, music noise) sampling 2000 coalitions. 
+**Example 3**: We compute Global SHAP contributions for *Omni-AVSR* using sampling SHAP in noisy conditions (0dB, music noise) sampling 2000 coalitions. 
 
 ```Shell
 python eval_OmniAVSR.py --wandb-project [wandb_project] --exp-name LRS3_OmniAVSR_shap_sampling_0dB_musicnoise \
@@ -151,7 +151,7 @@ python eval_OmniAVSR.py --wandb-project [wandb_project] --exp-name LRS3_OmniAVSR
 
 ### 📈 Generative SHAP
 
-We provide the code to compute how modality reliance evolves across windowed stages of autoregressive decoding and the corresponding plot as in our paper. The code expects the path to the saved .npz files containing shapley matrices from *Whisper-Flamingo*, *AV-HuBERT*, and *Omni-AVSR* in both *clean* and *noisy* conditions. Adjusting the code to a subset of these configurations is straighforward.
+We provide the code to compute how modality reliance evolves across windowed stages of autoregressive decoding and the corresponding plot as in our paper. The code expects the path to the saved .npz files containing shapley matrices from *Whisper-Flamingo*, *AV-HuBERT*, and *Omni-AVSR* models in both *clean* and *noisy* conditions. Adjusting the code to a subset of these configurations is straighforward.
 
 ```Shell
 python Compute_Generative_SHAP.py --Whisper-Flamingo-clean-path [/path/to/Whisper-Flamingo.npz clean] --Whisper-Flamingo-noisy-path [/path/to/Whisper-Flamingo.npz noisy] \
