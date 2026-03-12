@@ -28,7 +28,7 @@
 
 - [Highlights](#-highlights)
 - [Setup](#-setup)
-- [Ciao](#-ciao)
+- [Dr. SHAP-AV](#-dr-shap-av)
 - [Checkpoints](#-checkpoints)
 - [Citation](#-citation)
 - [Acknowledgements](#-acknowledgements)
@@ -59,7 +59,7 @@ greater reliance on visual information.
 
 ---
 
-## 🛠 Setup 
+## 🛠 Setup
 This repository contains the code to reproduce the results of our paper. Specifically, we include here the three `LLM-based models`: **1)** Llama-AVSR, **2)** Llama-SMoP, **3)** Omni-AVSR. Below we point to the repositories regarding the three `cross-attention encoder-decoder architectures`. Since each of them requires an ad-hoc environment, we created three dedicated repositories. On the contrary, Llama-AVSR, Llama-SMoP, and Omni-AVSR share the same environment.
 
 - [Auto-AVSR](https://github.com/umbertocappellazzo/auto_avsr_shap)
@@ -86,7 +86,7 @@ For our experiments, we are only interested in the test set of LRS3 and LRS2. So
 
 ---
 
-## Ciao
+## 🩺 Dr. SHAP-AV
 
 ### 🌐 Global Audio/video SHAP
 
@@ -115,19 +115,38 @@ The most important arguments to specify regardless of the pre-trained model used
 **Example 1**: We compute Global SHAP contributions for Llama-AVSR using permutation SHAP in clean conditions sampling 2000 coalitions. You can reduce the number of coalitions to make the computation faster.
 
 ```Shell
-python eval_LlamaAVSR.py --wandb-project [wandb_project] --exp-name LRS3_Llama-AVSR_shap_permutation_clean --root-dir [/root/directory/path] --pretrained-model-path [/path/to/ckpt/LRS3_audiovisual_avg-pooling_AVH-Large_Whisper-M_Llama3.2-1B_pool-4-2_LN_seed7/model_avg_1.pth] --modality audiovisual --pretrain-avhubert-enc-video-path [/path/to/avhubert/ckpt] --audio-encoder-name openai/whisper-medium.en --rank 32 --alpha 4 --llm-model meta-llama/Llama-3.2-1B --unfrozen-modules peft_llm --add-PEFT-LLM lora --downsample-ratio-audio 4 --downsample-ratio-video 2 --test-file lrs3_test_transcript_lengths_seg24s_LLM_lowercase.csv --compute-shap True --shap-alg permutation --num-samples-shap 2000 --output-path-shap [/path/to/output/folder]
+python eval_LlamaAVSR.py --wandb-project [wandb_project] --exp-name LRS3_Llama-AVSR_shap_permutation_clean \
+--root-dir [/root/directory/path] --pretrained-model-path [/path/to/ckpt/LRS3_audiovisual_avg-pooling_AVH-Large_Whisper-M_Llama3.2-1B_pool-4-2_LN_seed7/model_avg_1.pth] \
+--modality audiovisual --pretrain-avhubert-enc-video-path [/path/to/avhubert/ckpt] --audio-encoder-name openai/whisper-medium.en \
+--rank 32 --alpha 4 --llm-model meta-llama/Llama-3.2-1B --unfrozen-modules peft_llm --add-PEFT-LLM lora \
+--downsample-ratio-audio 4 --downsample-ratio-video 2 --test-file lrs3_test_transcript_lengths_seg24s_LLM_lowercase.csv \
+--compute-shap True --shap-alg permutation --num-samples-shap 2000 --output-path-shap [/path/to/output/folder]
 ```
 
 **Example 2**: We compute Global SHAP contributions for Llama-SMoP using permutation SHAP in noisy conditions (-10dB, babble noise) sampling 2000 coalitions. 
 
 ```Shell
-python eval_LlamaSMoP.py --wandb-project [wandb_project] --exp-name LRS3_Llama_SMoP_shap_permutation_minus10dB_babblenoise --root-dir [/root/directory/path] --pretrained-model-path [/path/to/ckpt/LRS3_SMoP_audiovisual_avg-pooling_AVH-Large_Whisper-M_Llama1B_pool-4-2_seed7] --modality audiovisual --pretrain-avhubert-enc-video-path [/path/to/avhubert/ckpt] --audio-encoder-name openai/whisper-medium.en --rank 32 --alpha 4 --llm-model meta-llama/Llama-3.2-1B --unfrozen-modules peft_llm --add-PEFT-LLM lora --downsample-ratio-audio 4 --downsample-ratio-video 2 --test-file lrs3_test_transcript_lengths_seg24s_LLM_lowercase.csv --MoP-experts 4 --MoP-topk 2 --compute-shap True --shap-alg permutation --num-samples-shap 2000 --output-path-shap [/path/to/output/folder] --decode-snr-target -10 --noise-type babble
+python eval_LlamaSMoP.py --wandb-project [wandb_project] --exp-name LRS3_Llama_SMoP_shap_permutation_minus10dB_babblenoise \
+--root-dir [/root/directory/path] --pretrained-model-path [/path/to/ckpt/LRS3_SMoP_audiovisual_avg-pooling_AVH-Large_Whisper-M_Llama1B_pool-4-2_seed7] \
+--modality audiovisual --pretrain-avhubert-enc-video-path [/path/to/avhubert/ckpt] --audio-encoder-name openai/whisper-medium.en \
+--rank 32 --alpha 4 --llm-model meta-llama/Llama-3.2-1B --unfrozen-modules peft_llm --add-PEFT-LLM lora \
+--downsample-ratio-audio 4 --downsample-ratio-video 2 --test-file lrs3_test_transcript_lengths_seg24s_LLM_lowercase.csv \
+--MoP-experts 4 --MoP-topk 2 --compute-shap True --shap-alg permutation --num-samples-shap 2000 \
+--output-path-shap [/path/to/output/folder] --decode-snr-target -10 --noise-type babble
 ```
 
 **Example 3**: We compute Global SHAP contributions for Omni-AVSR using sampling SHAP in noisy conditions (0dB, music noise) sampling 2000 coalitions. 
 
 ```Shell
-python eval_OmniAVSR.py --wandb-project [wandb_project] --exp-name LRS3_OmniAVSR_shap_sampling_0dB_musicnoise --root-dir [/root/directory/path] --pretrained-model-path [/path/to/ckpt/LRS3_OmniAVSR_Matry_weights_1-15-1_avg-pooling_Whisper-M_Llama3.2-1B_LoRA_task-specific_sharedLoRA_pool-audio4-16_video2-5_LN_seed7] --modality audiovisual --audio-encoder-name openai/whisper-medium.en --pretrain-avhubert-enc-video-path [/path/to/avhubert/ckpt] --llm-model meta-llama/Llama-3.2-1B --unfrozen-modules peft_llm lora_avhubert --use-lora-avhubert True --add-PEFT-LLM lora --rank 32 --alpha 4 --downsample-ratio-audio 4 16 --downsample-ratio-video 2 5 --matry-weights 1. 1.5 1. --is-task-specific True --use-shared-lora-task-specific True --test-file lrs3_test_transcript_lengths_seg24s_LLM_lowercase.csv --test-specific-modality True --task-to-test audiovisual --test-specific-ratio True --downsample-ratio-test-matry-audio 4 --downsample-ratio-test-matry-video 2 --compute-shap True --shap-alg sampling --num-samples-shap 2000 --output-path-shap [/path/to/output/folder] --decode-snr-target 0 --noise-type music
+python eval_OmniAVSR.py --wandb-project [wandb_project] --exp-name LRS3_OmniAVSR_shap_sampling_0dB_musicnoise \
+--root-dir [/root/directory/path] --pretrained-model-path [/path/to/ckpt/LRS3_OmniAVSR_Matry_weights_1-15-1_avg-pooling_Whisper-M_Llama3.2-1B_LoRA_task-specific_sharedLoRA_pool-audio4-16_video2-5_LN_seed7] \
+--modality audiovisual --audio-encoder-name openai/whisper-medium.en --pretrain-avhubert-enc-video-path [/path/to/avhubert/ckpt] \
+--llm-model meta-llama/Llama-3.2-1B --unfrozen-modules peft_llm lora_avhubert --use-lora-avhubert True --add-PEFT-LLM lora \
+--rank 32 --alpha 4 --downsample-ratio-audio 4 16 --downsample-ratio-video 2 5 --matry-weights 1. 1.5 1. --is-task-specific True \ 
+--use-shared-lora-task-specific True --test-file lrs3_test_transcript_lengths_seg24s_LLM_lowercase.csv --test-specific-modality True \
+--task-to-test audiovisual --test-specific-ratio True --downsample-ratio-test-matry-audio 4 --downsample-ratio-test-matry-video 2 \
+--compute-shap True --shap-alg sampling --num-samples-shap 2000 --output-path-shap [/path/to/output/folder] \
+--decode-snr-target 0 --noise-type music
 ```
 
 ### 📈 Generative SHAP
@@ -135,7 +154,10 @@ python eval_OmniAVSR.py --wandb-project [wandb_project] --exp-name LRS3_OmniAVSR
 We provide the code to compute how modality reliance evolves across windowed stages of autoregressive decoding and the corresponding plot as in our paper. The code expects the path to the saved .npz files containing shapley matrices from *Whisper-Flamingo*, *AV-HuBERT*, and *Omni-AVSR* in both *clean* and *noisy* conditions. Adjusting the code to a subset of these configurations is straighforward.
 
 ```Shell
-python Compute_Generative_SHAP.py --Whisper-Flamingo-clean-path [/path/to/Whisper-Flamingo.npz clean] --Whisper-Flamingo-noisy-path [/path/to/Whisper-Flamingo.npz noisy] --Omni-AVSR-clean-path [/path/to/Omni-AVSR.npz clean] --Omni-AVSR-noisy-path [/path/to/Omni-AVSR.npz noisy] --AVHuBERT-clean-path [/path/to/AV-HuBERT.npz clean] --AVHuBERT-noisy-path [/path/to/AV-HuBERT.npz noisy] --num-samples 20 --num-windows 5
+python Compute_Generative_SHAP.py --Whisper-Flamingo-clean-path [/path/to/Whisper-Flamingo.npz clean] --Whisper-Flamingo-noisy-path [/path/to/Whisper-Flamingo.npz noisy] \
+--Omni-AVSR-clean-path [/path/to/Omni-AVSR.npz clean] --Omni-AVSR-noisy-path [/path/to/Omni-AVSR.npz noisy] \
+--AVHuBERT-clean-path [/path/to/AV-HuBERT.npz clean] --AVHuBERT-noisy-path [/path/to/AV-HuBERT.npz noisy] \
+--num-samples 20 --num-windows 5
 ```
 
 ### 🔗 Temporal Alignment SHAP
