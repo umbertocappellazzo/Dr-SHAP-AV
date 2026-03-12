@@ -28,6 +28,8 @@
     .fade-d1 { transition-delay: 0.1s; }
     .fade-d2 { transition-delay: 0.2s; }
     .fade-d3 { transition-delay: 0.3s; }
+    .fade-d4 { transition-delay: 0.4s; }
+
 
     /* ---- NAV ---- */
     .nav {
@@ -93,6 +95,35 @@
       max-width: 580px; font-weight: 300; margin-bottom: 52px;
       font-family: 'Plus Jakarta Sans', sans-serif;
     }
+        .hero-authors {
+      position: relative; text-align: center;
+      margin-bottom: 32px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .authors-names {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .author {
+      font-size: 17px; font-weight: 600; color: rgba(255,255,255,0.8);
+    }
+    .author sup {
+      font-size: 11px; color: #c084fc; margin-left: 1px;
+    }
+    .author-sep {
+      color: rgba(255,255,255,0.2); font-size: 14px;
+    }
+    .authors-affiliations {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; flex-wrap: wrap;
+    }
+    .affiliation {
+      font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 400;
+    }
+    .affiliation sup {
+      font-size: 10px; color: rgba(192,132,252,0.6); margin-right: 2px;
+    }
+
     .hero-btns {
       position: relative; display: flex; gap: 14px;
       flex-wrap: wrap; justify-content: center;
@@ -236,7 +267,7 @@
     .fig-preview-inner {
       padding: 40px;
       display: flex; flex-direction: column; align-items: center;
-      gap: 20px; max-height: 620px; overflow: auto;;
+      gap: 20px; max-height: 620px; overflow: auto;
     }
     .fig-preview-hint {
       text-align: center; padding: 56px 40px;
@@ -427,6 +458,10 @@
       .hero { padding: 80px 20px 60px; min-height: auto; min-height: 100svh; }
       .hero-title { font-size: clamp(30px, 8vw, 42px); margin-bottom: 20px; }
       .hero-sub { font-size: 15px; margin-bottom: 36px; max-width: 100%; }
+      .hero-authors { margin-bottom: 24px; }
+      .author { font-size: 15px; }
+      .affiliation { font-size: 13px; }
+      .authors-names { gap: 6px; }
       .hero-btns { flex-direction: column; align-items: stretch; width: 100%; max-width: 300px; }
       .hb { justify-content: center; padding: 14px 24px; font-size: 14px; }
       .scroll-hint { display: none; }
@@ -496,10 +531,27 @@
       <span class="grad">Dr. SHAP-AV:</span><br>
       Decoding Modality<br>Contributions via Shapley Attribution in AVSR
     </h1>
-    <p class="hero-sub fade-in fade-d2">
+    <div class="hero-authors fade-in fade-d2">
+      <div class="authors-names">
+        <span class="author">Umberto Cappellazzo<sup>1</sup></span>
+        <span class="author-sep">&middot;</span>
+        <span class="author">Stavros Petridis<sup>1,2</sup></span>
+        <span class="author-sep">&middot;</span>
+        <span class="author">Maja Pantic<sup>1,2</sup></span>
+      </div>
+      <div class="authors-affiliations">
+        <span class="affiliation"><sup>1</sup> Imperial College London</span>
+        <span class="affil-sep">&nbsp;&nbsp;</span>
+        <span class="affiliation"><sup>2</sup> NatWest AI Research</span>
+      </div>
+    </div>
+    <p class="hero-sub fade-in fade-d3">
+      A Shapley-based framework revealing how audio-visual speech recognition models balance what they hear and what they see &mdash; across noise levels, decoding stages, and architectures.
+
+    <p class="hero-sub fade-in fade-d3">
       A <span class="grad">Shapley</span>-based framework revealing how audio-visual speech recognition models balance what they hear and what they see &mdash; across noise levels, decoding stages, and architectures.
     </p>
-    <div class="hero-btns fade-in fade-d3">
+    <div class="hero-btns fade-in fade-d4">
       <a class="hb hb-ghost" href="#">&#x1F4C4; Read Paper</a>
       <a class="hb hb-ghost" href="#">&#x1F4BB; GitHub</a>
       <a class="hb hb-ghost" href="#cite">&#x1F4CB; BibTeX</a>
@@ -930,7 +982,7 @@
     function copyBib() {
       const bib = `@article{drshapav2026,
   title={Dr. SHAP-AV: Decoding Relative Modality Contributions via Shapley Attribution in Audio-Visual Speech Recognition},
-  author={Anonymous},
+  author={Cappellazzo, Umberto and Petridis, Stavros and Pantic, Maja},
   year={2026},
   note={Under submission}
 }`;
