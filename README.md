@@ -107,7 +107,7 @@ The most important arguments to specify regardless of the pre-trained model used
 - `compute-shap`: Flag to allow SHAP computations. If set to False (default), we only evaluate the pre-trained model and compute the WER on the test set. Hence, all the subsequent arguments can be skipped.
 - `shap-alg`: The algorithm from the shap library to compute the shapley matrix. Choices: [`sampling`, `permutation`].
 -  `num-samples-shap`: The number of coalitions to sample.
--  `output-path`: The path to save the SHAP values for further analyses. **This folder must be created beforehand!**
+-  `output-path`: The path to save the SHAP values for further analyses. **This folder must be created beforehand!** By default, this is set to None, meaning the Shapley Matrix of each input won't be saved. 
 -  `noise-type`: The acoustic noise file to sample from. Choices: [`babble`, `music`, `sound`, `speech`].
 -  `decode-snr-target`: The SNR level of acoustic noise to test on.
 
