@@ -129,14 +129,14 @@ all_video_temporal = []
 audio_correlations = []
 video_correlations = []
 
-is_OmniAVSR = True if ("Omni" in experiment_path or "Llama-AVSR" in experiment_path) else False
+is_Omni_LlamaAVSR = True if ("Omni" in experiment_path or "Llama-AVSR" in experiment_path) else False
 is_avhubert = True if "av_hubert" in experiment_path else False
-if is_OmniAVSR or is_avhubert:
+if is_Omni_LlamaAVSR or is_avhubert:
         sorted_indices_desc = sorted(range(len(num_audio_tokens)), key=lambda i: num_audio_tokens[i], reverse=True)
 
 for sample_idx in range(num_samples):
-    shap_values = shap_values_all[sorted_indices_desc[sample_idx]] if (is_OmniAVSR or is_avhubert) else shap_values_all[sample_idx]
-    if is_OmniAVSR:
+    shap_values = shap_values_all[sorted_indices_desc[sample_idx]] if (is_Omni_LlamaAVSR or is_avhubert) else shap_values_all[sample_idx]
+    if is_Omni_LlamaAVSR:
         N_a = num_audio_tokens[sorted_indices_desc[sample_idx]]//4
     elif is_avhubert:
         N_a = num_audio_tokens[sorted_indices_desc[sample_idx]]
