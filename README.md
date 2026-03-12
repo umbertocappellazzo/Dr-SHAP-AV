@@ -28,7 +28,7 @@
 
 - [Highlights](#-highlights)
 - [Setup](#-setup)
-- [Dr. SHAP-AV](#-ciao)
+- [Ciao](#-ciao)
 - [Checkpoints](#-checkpoints)
 - [Citation](#-citation)
 - [Acknowledgements](#-acknowledgements)
@@ -86,7 +86,7 @@ For our experiments, we are only interested in the test set of LRS3 and LRS2. So
 
 ---
 
-## Dr. SHAP-AV
+## Ciao
 
 ### 🌐 Global Audio/video SHAP
 
