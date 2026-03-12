@@ -28,8 +28,7 @@
 
 - [Highlights](#-highlights)
 - [Setup](#-setup)
-- [Training](#-training)
-- [Evaluation](#-evaluation)
+- [Dr. SHAP-AV](#-ciao)
 - [Checkpoints](#-checkpoints)
 - [Citation](#-citation)
 - [Acknowledgements](#-acknowledgements)
@@ -131,6 +130,23 @@ python eval_LlamaSMoP.py --wandb-project [wandb_project] --exp-name LRS3_Llama_S
 python eval_OmniAVSR.py --wandb-project [wandb_project] --exp-name LRS3_OmniAVSR_shap_sampling_0dB_musicnoise --root-dir [/root/directory/path] --pretrained-model-path [/path/to/ckpt/LRS3_OmniAVSR_Matry_weights_1-15-1_avg-pooling_Whisper-M_Llama3.2-1B_LoRA_task-specific_sharedLoRA_pool-audio4-16_video2-5_LN_seed7] --modality audiovisual --audio-encoder-name openai/whisper-medium.en --pretrain-avhubert-enc-video-path [/path/to/avhubert/ckpt] --llm-model meta-llama/Llama-3.2-1B --unfrozen-modules peft_llm lora_avhubert --use-lora-avhubert True --add-PEFT-LLM lora --rank 32 --alpha 4 --downsample-ratio-audio 4 16 --downsample-ratio-video 2 5 --matry-weights 1. 1.5 1. --is-task-specific True --use-shared-lora-task-specific True --test-file lrs3_test_transcript_lengths_seg24s_LLM_lowercase.csv --test-specific-modality True --task-to-test audiovisual --test-specific-ratio True --downsample-ratio-test-matry-audio 4 --downsample-ratio-test-matry-video 2 --compute-shap True --shap-alg sampling --num-samples-shap 2000 --output-path-shap [/path/to/output/folder] --decode-snr-target 0 --noise-type music
 ```
 
+### 📈 Generative SHAP
+
+We provide the code to compute how modality reliance evolves across windowed stages of autoregressive decoding and the corresponding plot as in our paper. The code expects the path to the saved .npz files containing shapley matrices from *Whisper-Flamingo*, *AV-HuBERT*, and *Omni-AVSR* in both *clean* and *noisy* conditions. Adjusting the code to a subset of these configurations is straighforward.
+
+```Shell
+python Compute_Generative_SHAP.py --Whisper-Flamingo-clean-path [/path/to/Whisper-Flamingo.npz clean] --Whisper-Flamingo-noisy-path [/path/to/Whisper-Flamingo.npz noisy] --Omni-AVSR-clean-path [/path/to/Omni-AVSR.npz clean] --Omni-AVSR-noisy-path [/path/to/Omni-AVSR.npz noisy] --AVHuBERT-clean-path [/path/to/AV-HuBERT.npz clean] --AVHuBERT-noisy-path [/path/to/AV-HuBERT.npz noisy] --num-samples 20 --num-windows 5
+```
+
+### 🔗 Temporal Alignment SHAP
+
+We provide the code to examine temporal correspondence between input feature positions and output token positions. Ensure that the saved .npz file name for `AV-HuBERT`/`Omni-AVSR`/`Llama-AVSR` has the keyword `av_hubert`/`Omni`/`Llama-AVSR` in it.
+
+```Shell
+python Compute_Alignment_SHAP.py --path-to-data [/path/to/data.npz] --num-samples 20 --num-bins 10
+```
+
+---
 
 ## 🎁 Checkpoints
 
