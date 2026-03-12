@@ -67,8 +67,23 @@ This repository contains the code to reproduce the results of our paper. Specifi
 - [AV-HuBERT](https://github.com/umbertocappellazzo/av_hubert_shap)
 - [Whisper-Flamingo](https://github.com/umbertocappellazzo/whisper-flamingo-shap)
 
+### 1) Installation
+Our setup follows that of [Llama-AVSR](https://github.com/umbertocappellazzo/Llama-AVSR) and [Omni-AVSR](https://github.com/umbertocappellazzo/Omni-AVSR). 
 
-Our setup follows that of [Llama-AVSR](https://github.com/umbertocappellazzo/Llama-AVSR).
+Install necessary dependencies: 
+
+```bash
+   pip install -r requirements.txt
+   cd av_hubert
+   git submodule init
+   git submodule update
+   cd fairseq
+   pip install --editable ./
+```
+
+### 2) Datasets Pre-processing
+
+For our experiments, we are only interested in the test set of LRS3 and LRS2. So please follow the instructions in [Omni-AVSR](https://github.com/umbertocappellazzo/Omni-AVSR) to process them. I can share the pre-processed test sets with you if you need to.
 
 ## 🔖 Citation
 
