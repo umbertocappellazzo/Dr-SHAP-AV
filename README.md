@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![arXiv](https://img.shields.io/badge/arXiv-2024.12345-b31b1b.svg)](?)
+[![arXiv](https://img.shields.io/badge/arXiv-2024.12345-b31b1b.svg)](https://arxiv.org/abs/2603.12046)
 [![Website](https://img.shields.io/badge/🌐-Website-blue.svg)](https://umbertocappellazzo.github.io/Dr-SHAP-AV)
 [![Visitors](https://visitor-badge.laobi.icu/badge?page_id=umbertocappellazzo.Dr-SHAP-AV)](https://github.com/umbertocappellazzo/Dr-SHAP-AV)
 [![GitHub Stars](https://img.shields.io/github/stars/umbertocappellazzo/Dr-SHAP-AV?style=social)](https://github.com/umbertocappellazzo/Dr-SHAP-AV/stargazers)
@@ -192,7 +192,7 @@ If you find our work useful, please cite:
 @article{cappellazzo2026ODrSHAPAV,
   title={Dr. SHAP-AV: Decoding Relative Modality Contributions via Shapley Attribution in Audio-Visual Speech Recognition},
   author={Umberto, Cappellazzo and Stavros, Petridis and Maja, Pantic},
-  journal={arXiv preprint arXiv:?},
+  journal={arXiv preprint arXiv:2603.12046},
   year={2026}
 }
 ```
@@ -211,7 +211,7 @@ If you find our work useful, please cite:
 For questions and discussions, please:
 - Open an issue on GitHub
 - Email: umbertocappellazzo@gmail.com
-- Visit our [project page](https://umbertocappellazzo.github.io/Dr-SHAP-AV/) and our [preprint](https://arxiv.org/abs/?)
+- Visit our [project page](https://umbertocappellazzo.github.io/Dr-SHAP-AV/) and our [preprint](https://arxiv.org/abs/2603.12046)
 
 ---
 
