@@ -31,9 +31,46 @@
     .fade-d4 { transition-delay: 0.4s; }
 
 
+    /* ---- ANNOUNCEMENT BANNER ---- */
+    .announce-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+      height: 44px; display: flex; align-items: center;
+      justify-content: center; gap: 12px;
+      background: linear-gradient(135deg, #7c3aed, #c026d3, #e11d48);
+      background-size: 200% 200%;
+      animation: gradientShift 4s ease infinite;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px; color: white;
+      box-shadow: 0 4px 20px rgba(192, 38, 211, 0.3);
+    }
+    .announce-banner.hidden { display: none; }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .announce-sparkle {
+      font-size: 16px;
+      animation: sparkle 1.5s ease-in-out infinite;
+    }
+    @keyframes sparkle {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    .announce-text { display: flex; align-items: center; gap: 8px; }
+    .announce-text strong { font-weight: 700; letter-spacing: 0.02em; }
+    .announce-sub { font-weight: 400; opacity: 0.85; font-size: 13px; }
+    .announce-close {
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      font-size: 20px; cursor: pointer; padding: 4px 8px;
+      transition: color 0.2s; line-height: 1;
+    }
+    .announce-close:hover { color: white; }
+
     /* ---- NAV ---- */
     .nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      position: fixed; top: 44px; left: 0; right: 0; z-index: 200;
       padding: 0 40px; height: 60px;
       display: flex; align-items: center; justify-content: center;
       background: rgba(8, 8, 13, 0.82);
@@ -452,7 +489,7 @@
 
     /* ---- RESPONSIVE: MOBILE ---- */
     @media (max-width: 640px) {
-      .nav { padding: 0 16px; height: 52px; }
+      .nav { padding: 0 16px; top: 40px; height: 52px; }
       .nav-mid { gap: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .nav-mid a { font-size: 12px; }
       .hero { padding: 80px 20px 60px; min-height: auto; min-height: 100svh; }
@@ -494,6 +531,10 @@
       .cp-btn { top: 8px; right: 8px; padding: 5px 12px; }
       .sep { margin-left: 20px; margin-right: 20px; }
       .footer { padding: 40px 20px; }
+      .announce-banner { height: 40px; font-size: 12px; gap: 8px; }
+      .announce-sparkle { font-size: 14px; }
+      .announce-sub { display: none; }
+      .announce-close { right: 8px; font-size: 18px; }
     }
 
     /* ---- RESPONSIVE: SMALL MOBILE ---- */
@@ -509,8 +550,19 @@
 </head>
 <body>
 
+  <!-- ANNOUNCEMENT BANNER -->
+  <div class="announce-banner" id="announceBanner">
+    <div class="announce-sparkle">&#x1F389; &#x1F389;</div>
+    <div class="announce-text">
+      <strong>Dr. SHAP-AV is accepted at Interspeech 2026 [Long Track]!</strong>
+      <span class="announce-sub">See you in Sydney, Australia!</span>
+    </div>
+    <div class="announce-sparkle">🇦🇺🦘🐨</div>
+    <button class="announce-close" onclick="closeBanner()" aria-label="Close">&times;</button>
+  </div>
+
   <!-- NAV -->
-  <nav class="nav">
+  <nav class="nav" id="mainNav">
     <div class="nav-mid">
       <a href="#abstract">Abstract</a>
       <a href="#method">Method</a>
@@ -759,10 +811,10 @@
     <div class="fade-in fade-d1">
       <div class="bib-wrap">
         <button class="cp-btn" id="copyBtn" onclick="copyBib()">Copy</button>
-        <div class="bib-box"><span class="k">@article</span>{drshapav2026,
+        <div class="bib-box"><span class="k">@inproceedings</span>{drshapav2026,
   title = {<span class="v">Dr. SHAP-AV: Decoding Relative Modality Contributions via Shapley Attribution in Audio-Visual Speech Recognition</span>},
   author = {<span class="v">Cappellazzo, Umberto and Petridis, Stavros and Pantic, Maja</span>},
-  journal = {<span class="v">arXiv preprint arXiv:2603.12046</span>},
+  booktitle = {<span class="v">Interspeech</span>},
   year = {<span class="v">2026</span>}
 }</div>
       </div>
@@ -771,12 +823,17 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <p>Dr. SHAP-AV</p>
-    <p>Built with care for the research community</p>
+    <p>Dr. SHAP-AV - Interspeech 2026 [Long Track]</p>
   </footer>
 
   <!-- SCRIPTS -->
   <script>
+
+    // Close announcement banner
+    function closeBanner() {
+      document.getElementById('announceBanner').classList.add('hidden');
+      document.getElementById('mainNav').style.top = '0';
+    }
     // Scroll-triggered fade-in
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
